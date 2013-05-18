@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking" xmlns:jdbc-ee="http://www.mulesoft.org/schema/mule/ee/jdbc" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:facebook="http://www.mulesoft.org/schema/mule/facebook"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" version="EE-3.4.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/jdbc http://www.mulesoft.org/schema/mule/ee/jdbc/current/mule-jdbc-ee.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/facebook http://www.mulesoft.org/schema/mule/facebook/2.0/mule-facebook.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
+    
+    <facebook:config-with-oauth name="FB_Connector" appId="372252222881468" appSecret="20bc6d75bb97d64c2fe22d6d269eccf0" doc:name="Facebook">    
+        <facebook:oauth-callback-config domain="localhost" localPort="8081" remotePort="8081"/>  
+	</facebook:config-with-oauth> 
+	<flow name="TestFlow" doc:name="TestFlow">
+		<http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="8082" doc:name="HTTP" path="test_app"/>
+		<facebook:authorize config-ref="FB_Connector" doc:name="Facebook"/>
+        <set-session-variable variableName="accessTokenId" value="#[flowVars['OAuthAccessTokenId']]" doc:name="Save Access Token"/>
+        <flow-ref name="SendMessageFlow" doc:name="Call Send Message Flow"/>
+	</flow>
+    <flow name="SendMessageFlow" doc:name="SendMessageFlow">
+        <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="8081" doc:name="HTTP"/>
+        <facebook:publish-message config-ref="FB_Connector" msg="message" profile_id="pavel.titenkov" doc:name="Facebook" accessTokenId="#[sessionVars['accessTokenId']]" caption="message" description="msg" link="facebook.com"/>
+    </flow>
+</mule>
